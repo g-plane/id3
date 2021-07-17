@@ -1,3 +1,5 @@
+import type { ID3 } from "./types.ts";
+
 const FLAG_UNSYNCHRONISATION = 0b1000 << 4;
 const FLAG_EXTENDED_HEADER = 0b0100 << 4;
 const FLAG_EXPERIMENTAL_INDICATOR = 0b0010 << 4;
@@ -7,7 +9,7 @@ function countSize(bytes: Uint8Array): number {
   return (bytes[0] << 21) + (bytes[1] << 14) + (bytes[2] << 7) + bytes[3];
 }
 
-export function parse(bytes: Uint8Array) {
+export function parse(bytes: Uint8Array): ID3 {
   if (bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) {
     throw new Error(); // TODO: not an error
   }
@@ -16,9 +18,9 @@ export function parse(bytes: Uint8Array) {
   const revision = bytes[4];
 
   const flags = bytes[5];
-  const unsynchronisation = flags & FLAG_UNSYNCHRONISATION;
+  const unsynchronisation = !!(flags & FLAG_UNSYNCHRONISATION);
   const hasExtendedHeader = flags & FLAG_EXTENDED_HEADER;
-  const isExperimental = flags & FLAG_EXPERIMENTAL_INDICATOR;
+  const isExperimental = !!(flags & FLAG_EXPERIMENTAL_INDICATOR);
   const hasFooter = flags & FLAG_FOOTER_PRESENT;
 
   const dataView = new DataView(bytes.buffer);
@@ -30,6 +32,17 @@ export function parse(bytes: Uint8Array) {
   }
 
   parseFrames(bytes.subarray(10, 10 + tagSize));
+
+  return {
+    version: {
+      major: majorVersion,
+      revision,
+    },
+    flags: {
+      unsynchronisation,
+      isExperimental,
+    },
+  };
 }
 
 function parseExtenedHeader(bytes: Uint8Array) {
