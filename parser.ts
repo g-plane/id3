@@ -26,12 +26,14 @@ export function parse(bytes: Uint8Array): ID3 {
   const dataView = new DataView(bytes.buffer);
 
   const tagSize = countSize(bytes.subarray(6));
+  let offset = 10;
 
-  if (hasExtendedHeader) {
-    parseExtenedHeader(bytes.subarray(10));
-  }
+  const extendedHeaderSize = hasExtendedHeader
+    ? skipExtenedHeader(bytes.subarray(offset))
+    : 0;
+  offset += extendedHeaderSize;
 
-  parseFrames(bytes.subarray(10, 10 + tagSize));
+  parseFrames(bytes.subarray(offset, offset + (tagSize - extendedHeaderSize)));
 
   return {
     version: {
@@ -45,8 +47,8 @@ export function parse(bytes: Uint8Array): ID3 {
   };
 }
 
-function parseExtenedHeader(bytes: Uint8Array) {
-  //
+function skipExtenedHeader(bytes: Uint8Array) {
+  return countSize(bytes);
 }
 
 function parseFrames(bytes: Uint8Array) {
