@@ -1,9 +1,6 @@
-import type { ID3 } from "./types.ts";
-
-const FLAG_UNSYNCHRONISATION = 0b1000 << 4;
-const FLAG_EXTENDED_HEADER = 0b0100 << 4;
-const FLAG_EXPERIMENTAL_INDICATOR = 0b0010 << 4;
-const FLAG_FOOTER_PRESENT = 0b0001 << 4;
+import { Preservation } from "./types.ts";
+import type { Frame, ID3 } from "./types.ts";
+import * as flags from "./_flags.ts";
 
 function countSize(bytes: Uint8Array): number {
   return (bytes[0] << 21) + (bytes[1] << 14) + (bytes[2] << 7) + bytes[3];
@@ -17,11 +14,11 @@ export function parse(bytes: Uint8Array): ID3 {
   const majorVersion = bytes[3];
   const revision = bytes[4];
 
-  const flags = bytes[5];
-  const unsynchronisation = !!(flags & FLAG_UNSYNCHRONISATION);
-  const hasExtendedHeader = flags & FLAG_EXTENDED_HEADER;
-  const isExperimental = !!(flags & FLAG_EXPERIMENTAL_INDICATOR);
-  const hasFooter = flags & FLAG_FOOTER_PRESENT;
+  const headerFlags = bytes[5];
+  const unsynchronisation = !!(headerFlags & flags.FLAG_UNSYNCHRONISATION);
+  const hasExtendedHeader = headerFlags & flags.FLAG_EXTENDED_HEADER;
+  const isExperimental = !!(headerFlags & flags.FLAG_EXPERIMENTAL_INDICATOR);
+  const hasFooter = headerFlags & flags.FLAG_FOOTER_PRESENT;
 
   const dataView = new DataView(bytes.buffer);
 
@@ -52,24 +49,46 @@ function skipExtenedHeader(bytes: Uint8Array) {
 }
 
 function parseFrames(bytes: Uint8Array) {
-  let parsedSize = 0;
+  let offset = 0;
   const dataView = new DataView(bytes.buffer);
 
   while (
-    parsedSize < bytes.length && !peekIsPadding(bytes, parsedSize)
+    offset < bytes.length && !peekIsPadding(bytes, offset)
   ) {
-    const [frameSize] = parseFrame(bytes.subarray(parsedSize));
-    parsedSize += 10 + frameSize;
+    const [frameSize] = parseFrame(bytes.subarray(offset));
+    offset += 10 + frameSize;
   }
 }
 
-function parseFrame(bytes: Uint8Array): [size: number] {
+function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
   const decoder = new TextDecoder("utf8");
 
   const id = decoder.decode(bytes.subarray(0, 4));
   const size = countSize(bytes.subarray(4));
 
-  return [size];
+  const statusFlags = bytes[8];
+  const formatFlags = bytes[9];
+
+  const frame: Frame = {
+    id,
+    flags: {
+      tagAlterPreservation: statusFlags & flags.FLAG_TAG_ALTER_PRESERVATION
+        ? Preservation.Discarded
+        : Preservation.Preserved,
+      fileAlterPreservation: statusFlags & flags.FLAG_FILE_ALTER_PRESERVATION
+        ? Preservation.Discarded
+        : Preservation.Preserved,
+      readOnly: !!(statusFlags & flags.FLAG_FRAME_READ_ONLY),
+      grouping: !!(formatFlags & flags.FLAG_FRAME_HAS_GROUP),
+      compressed: !!(formatFlags & flags.FLAG_COMPRESSION),
+      encrypted: !!(formatFlags & flags.FLAG_ENCRYPTION),
+      unsyrchronised: !!(formatFlags & flags.FLAG_FRAME_UNSYNCHRONISATION),
+      hasDataLengthIndicator:
+        !!(formatFlags & flags.FLAG_DATA_LENGTH_INDICATOR),
+    },
+  };
+
+  return [size, frame];
 }
 
 function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
