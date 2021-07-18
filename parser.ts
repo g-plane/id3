@@ -1,5 +1,11 @@
-import { Preservation } from "./types.ts";
-import type { Frame, ID3 } from "./types.ts";
+import { FrameContentType, Preservation, TextEncoding } from "./types.ts";
+import type {
+  Frame,
+  FrameContent,
+  ID3,
+  TextFrameContent,
+  UnknownFrameContent,
+} from "./types.ts";
 import * as flags from "./_flags.ts";
 
 function countSize(bytes: Uint8Array): number {
@@ -30,7 +36,9 @@ export function parse(bytes: Uint8Array): ID3 {
     : 0;
   offset += extendedHeaderSize;
 
-  parseFrames(bytes.subarray(offset, offset + (tagSize - extendedHeaderSize)));
+  const frames = parseFrames(
+    bytes.subarray(offset, offset + (tagSize - extendedHeaderSize)),
+  );
 
   return {
     version: {
@@ -41,6 +49,7 @@ export function parse(bytes: Uint8Array): ID3 {
       unsynchronisation,
       isExperimental,
     },
+    frames,
   };
 }
 
@@ -48,16 +57,24 @@ function skipExtenedHeader(bytes: Uint8Array) {
   return countSize(bytes);
 }
 
-function parseFrames(bytes: Uint8Array) {
+function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
+  return bytes[offset] === 0 && bytes[offset + 1] === 0 &&
+    bytes[offset + 2] === 0 && bytes[offset + 3] === 0;
+}
+
+function parseFrames(bytes: Uint8Array): Frame[] {
   let offset = 0;
-  const dataView = new DataView(bytes.buffer);
+  const frames: Frame[] = [];
 
   while (
     offset < bytes.length && !peekIsPadding(bytes, offset)
   ) {
-    const [frameSize] = parseFrame(bytes.subarray(offset));
+    const [frameSize, frame] = parseFrame(bytes.subarray(offset));
+    frames.push(frame);
     offset += 10 + frameSize;
   }
+
+  return frames;
 }
 
 function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
@@ -69,7 +86,7 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
   const statusFlags = bytes[8];
   const formatFlags = bytes[9];
 
-  const frame: Frame = {
+  const frameHeader: Omit<Frame, "content"> = {
     id,
     flags: {
       tagAlterPreservation: statusFlags & flags.FLAG_TAG_ALTER_PRESERVATION
@@ -88,10 +105,33 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
     },
   };
 
+  const content: FrameContent = (() => {
+    if (id.startsWith("T") && id !== "TXXX") {
+      return parseTextFrameContent(bytes.subarray(10, 10 + size));
+    } else {
+      return { type: FrameContentType.Unknown } as UnknownFrameContent;
+    }
+  })();
+
+  const frame: Frame = Object.assign(frameHeader, { content });
+
   return [size, frame];
 }
 
-function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
-  return bytes[offset] === 0 && bytes[offset + 1] === 0 &&
-    bytes[offset + 2] === 0 && bytes[offset + 3] === 0;
+function parseTextFrameContent(bytes: Uint8Array): TextFrameContent {
+  const encoding: TextEncoding = bytes[0];
+  const decoder = new TextDecoder(TextEncoding[encoding]);
+
+  const terminatorCount =
+    encoding === TextEncoding["UTF-16"] || encoding === TextEncoding["UTF-16BE"]
+      ? 2
+      : 1;
+
+  return {
+    type: FrameContentType.Text,
+    encoding,
+    text: decoder.decode(
+      bytes.subarray(1, bytes.length - terminatorCount),
+    ),
+  };
 }
