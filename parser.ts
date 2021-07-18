@@ -61,9 +61,9 @@ function parseFrames(bytes: Uint8Array) {
 }
 
 function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
-  const decoder = new TextDecoder("utf8");
+  const defaultDecoder = new TextDecoder("ISO-8859-1");
 
-  const id = decoder.decode(bytes.subarray(0, 4));
+  const id = defaultDecoder.decode(bytes.subarray(0, 4));
   const size = countSize(bytes.subarray(4));
 
   const statusFlags = bytes[8];
