@@ -52,4 +52,5 @@ export enum TextEncoding {
 
 export type UnknownFrameContent = {
   type: FrameContentType.Unknown;
+  raw: Uint8Array;
 };

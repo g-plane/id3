@@ -104,10 +104,12 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
   };
 
   const content: FrameContent = (() => {
+    const frameContent = bytes.subarray(10, 10 + size);
+
     if (id.startsWith("T") && id !== "TXXX") {
-      return parseTextFrameContent(bytes.subarray(10, 10 + size));
+      return parseTextFrameContent(frameContent);
     } else {
-      return { type: FrameContentType.Unknown } as UnknownFrameContent;
+      return parseUnknownFrameContent(frameContent);
     }
   })();
 
@@ -131,5 +133,12 @@ function parseTextFrameContent(bytes: Uint8Array): TextFrameContent {
     text: decoder.decode(
       bytes.subarray(1, bytes.length - terminatorCount),
     ),
+  };
+}
+
+function parseUnknownFrameContent(bytes: Uint8Array): UnknownFrameContent {
+  return {
+    type: FrameContentType.Unknown,
+    raw: bytes.slice(),
   };
 }
