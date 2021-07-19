@@ -1,5 +1,11 @@
-import { FrameContentType, Preservation, TextEncoding } from "./types.ts";
+import {
+  FrameContentType,
+  PictureType,
+  Preservation,
+  TextEncoding,
+} from "./types.ts";
 import type {
+  AttachedPictureFrameContent,
   Frame,
   FrameContent,
   ID3,
@@ -108,6 +114,8 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
 
     if (id.startsWith("T") && id !== "TXXX") {
       return parseTextFrameContent(frameContent);
+    } else if (id === "APIC") {
+      return parseAttachedPictureFrameContent(frameContent);
     } else {
       return parseUnknownFrameContent(frameContent);
     }
@@ -133,6 +141,36 @@ function parseTextFrameContent(bytes: Uint8Array): TextFrameContent {
     text: decoder.decode(
       bytes.subarray(1, bytes.length - terminatorCount),
     ),
+  };
+}
+
+function parseAttachedPictureFrameContent(
+  bytes: Uint8Array,
+): AttachedPictureFrameContent {
+  const encoding: TextEncoding = bytes[0];
+
+  let offset = 1 + bytes.subarray(1).indexOf(0);
+  const defaultDecoder = new TextDecoder("ISO-8859-1");
+  const mimeType = defaultDecoder.decode(bytes.subarray(1, offset));
+
+  offset += 1;
+  const pictureType: PictureType = bytes[offset];
+
+  offset += 1;
+  const descriptionSize = bytes.subarray(offset).indexOf(0);
+  const decoder = new TextDecoder(TextEncoding[encoding]);
+  const description = decoder.decode(
+    bytes.subarray(offset, offset + descriptionSize),
+  );
+
+  const picture = bytes.slice(offset + descriptionSize + 1);
+
+  return {
+    type: FrameContentType.AttachedPicture,
+    mimeType,
+    pictureType,
+    description,
+    picture,
   };
 }
 

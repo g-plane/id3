@@ -33,9 +33,13 @@ export type Frame = {
 export enum FrameContentType {
   Unknown,
   Text,
+  AttachedPicture,
 }
 
-export type FrameContent = TextFrameContent | UnknownFrameContent;
+export type FrameContent =
+  | TextFrameContent
+  | AttachedPictureFrameContent
+  | UnknownFrameContent;
 
 export type TextFrameContent = {
   type: FrameContentType.Text;
@@ -48,6 +52,39 @@ export enum TextEncoding {
   "UTF-16",
   "UTF-16BE",
   "UTF-8",
+}
+
+export type AttachedPictureFrameContent = {
+  type: FrameContentType.AttachedPicture;
+  mimeType: string;
+  pictureType: PictureType;
+  description: string;
+  picture: Uint8Array;
+};
+
+export enum PictureType {
+  Other,
+  /** 32x32 pixels, PNG only */
+  FileIcon,
+  OtherFileIcon,
+  FrontCover,
+  BackCover,
+  LeafletPage,
+  Media,
+  LeadArtist,
+  Artist,
+  Conductor,
+  Orchestra,
+  Composer,
+  Lyricist,
+  RecordingLocation,
+  DuringRecording,
+  DuringPerformance,
+  Movie,
+  ABrightColoredFish,
+  Illustration,
+  ArtistLogotype,
+  Publisher,
 }
 
 export type UnknownFrameContent = {
