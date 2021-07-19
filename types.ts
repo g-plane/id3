@@ -31,8 +31,8 @@ export type Frame = {
 };
 
 export enum FrameContentType {
-  Text,
   Unknown,
+  Text,
 }
 
 export type FrameContent = TextFrameContent | UnknownFrameContent;
