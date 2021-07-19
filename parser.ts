@@ -26,8 +26,6 @@ export function parse(bytes: Uint8Array): ID3 {
   const isExperimental = !!(headerFlags & flags.FLAG_EXPERIMENTAL_INDICATOR);
   const hasFooter = headerFlags & flags.FLAG_FOOTER_PRESENT;
 
-  const dataView = new DataView(bytes.buffer);
-
   const tagSize = countSize(bytes.subarray(6));
   let offset = 10;
 
