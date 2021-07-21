@@ -5,12 +5,13 @@ import {
   TextEncoding,
 } from "./types.ts";
 import type {
-  AttachedPictureFrameContent,
+  AttachedPictureFrame,
   Frame,
   FrameContent,
+  FrameHeader,
   ID3,
-  TextFrameContent,
-  UnknownFrameContent,
+  TextFrame,
+  UnknownFrame,
 } from "./types.ts";
 import * as flags from "./_flags.ts";
 
@@ -90,7 +91,7 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
   const statusFlags = bytes[8];
   const formatFlags = bytes[9];
 
-  const frameHeader: Omit<Frame, "content"> = {
+  const frameHeader: FrameHeader = {
     id,
     flags: {
       tagAlterPreservation: statusFlags & flags.FLAG_TAG_ALTER_PRESERVATION
@@ -109,7 +110,7 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
     },
   };
 
-  const content: FrameContent = (() => {
+  const content = (() => {
     const frameContent = bytes.subarray(10, 10 + size);
 
     if (id.startsWith("T") && id !== "TXXX") {
@@ -121,12 +122,12 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
     }
   })();
 
-  const frame: Frame = Object.assign(frameHeader, { content });
+  const frame: Frame = Object.assign(frameHeader, content);
 
   return [size, frame];
 }
 
-function parseTextFrameContent(bytes: Uint8Array): TextFrameContent {
+function parseTextFrameContent(bytes: Uint8Array): FrameContent<TextFrame> {
   const encoding: TextEncoding = bytes[0];
   const decoder = new TextDecoder(TextEncoding[encoding]);
 
@@ -146,7 +147,7 @@ function parseTextFrameContent(bytes: Uint8Array): TextFrameContent {
 
 function parseAttachedPictureFrameContent(
   bytes: Uint8Array,
-): AttachedPictureFrameContent {
+): FrameContent<AttachedPictureFrame> {
   const encoding: TextEncoding = bytes[0];
 
   let offset = 1 + bytes.subarray(1).indexOf(0);
@@ -174,7 +175,9 @@ function parseAttachedPictureFrameContent(
   };
 }
 
-function parseUnknownFrameContent(bytes: Uint8Array): UnknownFrameContent {
+function parseUnknownFrameContent(
+  bytes: Uint8Array,
+): FrameContent<UnknownFrame> {
   return {
     type: FrameContentType.Unknown,
     raw: bytes.slice(),

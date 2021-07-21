@@ -15,7 +15,9 @@ export enum Preservation {
   Discarded,
 }
 
-export type Frame = {
+export type Frame = TextFrame | AttachedPictureFrame | UnknownFrame;
+
+export interface FrameHeader {
   id: string;
   flags: {
     tagAlterPreservation: Preservation;
@@ -27,8 +29,7 @@ export type Frame = {
     unsyrchronised: boolean;
     hasDataLengthIndicator: boolean;
   };
-  content: FrameContent;
-};
+}
 
 export enum FrameContentType {
   Unknown,
@@ -36,16 +37,13 @@ export enum FrameContentType {
   AttachedPicture,
 }
 
-export type FrameContent =
-  | TextFrameContent
-  | AttachedPictureFrameContent
-  | UnknownFrameContent;
+export type FrameContent<T extends Frame> = Omit<T, keyof FrameHeader>;
 
-export type TextFrameContent = {
+export interface TextFrame extends FrameHeader {
   type: FrameContentType.Text;
   encoding: TextEncoding;
   text: string;
-};
+}
 
 export enum TextEncoding {
   "ISO-8859-1",
@@ -54,13 +52,13 @@ export enum TextEncoding {
   "UTF-8",
 }
 
-export type AttachedPictureFrameContent = {
+export interface AttachedPictureFrame extends FrameHeader {
   type: FrameContentType.AttachedPicture;
   mimeType: string;
   pictureType: PictureType;
   description: string;
   picture: Uint8Array;
-};
+}
 
 export enum PictureType {
   Other,
@@ -87,7 +85,7 @@ export enum PictureType {
   Publisher,
 }
 
-export type UnknownFrameContent = {
+export interface UnknownFrame extends FrameHeader {
   type: FrameContentType.Unknown;
   raw: Uint8Array;
-};
+}
