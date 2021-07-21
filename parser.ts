@@ -19,9 +19,9 @@ function countSize(bytes: Uint8Array): number {
   return (bytes[0] << 21) + (bytes[1] << 14) + (bytes[2] << 7) + bytes[3];
 }
 
-export function parse(bytes: Uint8Array): ID3 {
+export function parse(bytes: Uint8Array): ID3 | undefined {
   if (bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) {
-    throw new Error(); // TODO: not an error
+    return undefined
   }
 
   const majorVersion = bytes[3];
