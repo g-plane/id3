@@ -15,7 +15,11 @@ export enum Preservation {
   Discarded,
 }
 
-export type Frame = TextFrame | AttachedPictureFrame | UnknownFrame;
+export type Frame =
+  | TextFrame
+  | AttachedPictureFrame
+  | CommentFrame
+  | UnknownFrame;
 
 export interface FrameHeader {
   id: string;
@@ -35,6 +39,7 @@ export enum FrameContentType {
   Unknown,
   Text,
   AttachedPicture,
+  Comment,
 }
 
 export type FrameContent<T extends Frame> = Omit<T, keyof FrameHeader>;
@@ -83,6 +88,14 @@ export enum PictureType {
   Illustration,
   ArtistLogotype,
   Publisher,
+}
+
+export interface CommentFrame extends FrameHeader {
+  type: FrameContentType.Comment;
+  encoding: TextEncoding;
+  language: string;
+  description: string;
+  text: string;
 }
 
 export interface UnknownFrame extends FrameHeader {

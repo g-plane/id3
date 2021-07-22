@@ -1,6 +1,7 @@
 import { FrameContentType } from "./types.ts";
 import type {
   AttachedPictureFrame,
+  CommentFrame,
   Frame,
   TextFrame,
   UnknownFrame,
@@ -18,4 +19,8 @@ export function isAttachedPictureFrame(
   frame: Frame,
 ): frame is AttachedPictureFrame {
   return frame.type === FrameContentType.AttachedPicture;
+}
+
+export function isCommentFrame(frame: Frame): frame is CommentFrame {
+  return frame.type === FrameContentType.Comment;
 }

@@ -6,6 +6,7 @@ import {
 } from "./types.ts";
 import type {
   AttachedPictureFrame,
+  CommentFrame,
   Frame,
   FrameContent,
   FrameHeader,
@@ -21,7 +22,7 @@ function countSize(bytes: Uint8Array): number {
 
 export function parse(bytes: Uint8Array): ID3 | undefined {
   if (bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) {
-    return undefined
+    return undefined;
   }
 
   const majorVersion = bytes[3];
@@ -117,6 +118,8 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
       return parseTextFrameContent(frameContent);
     } else if (id === "APIC") {
       return parseAttachedPictureFrameContent(frameContent);
+    } else if (id === "COMM") {
+      return parseCommentFrameContent(frameContent);
     } else {
       return parseUnknownFrameContent(frameContent);
     }
@@ -172,6 +175,35 @@ function parseAttachedPictureFrameContent(
     pictureType,
     description,
     picture,
+  };
+}
+
+function parseCommentFrameContent(
+  bytes: Uint8Array,
+): FrameContent<CommentFrame> {
+  const encoding: TextEncoding = bytes[0];
+
+  const defaultDecoder = new TextDecoder("ISO-8859-1");
+  const language = defaultDecoder.decode(bytes.subarray(1, 4));
+
+  const decoder = new TextDecoder(TextEncoding[encoding]);
+  const descriptionSize = bytes.subarray(4).indexOf(0);
+  let offset = 4 + descriptionSize;
+  const description = decoder.decode(bytes.subarray(4, offset));
+
+  offset += 1;
+  if (bytes[offset] === 0) {
+    offset += 1;
+  }
+
+  const text = decoder.decode(bytes.subarray(offset, bytes.length - 1));
+
+  return {
+    type: FrameContentType.Comment,
+    encoding,
+    language,
+    description,
+    text,
   };
 }
 
