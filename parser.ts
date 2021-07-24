@@ -259,7 +259,7 @@ function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
       });
     case FrameContentType.AttachedPicture:
       return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "AttachedFrame",
+        value: "AttachedPictureFrame",
         enumerable: false,
       });
     case FrameContentType.Comment:
