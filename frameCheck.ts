@@ -5,6 +5,8 @@ import type {
   Frame,
   TextFrame,
   UnknownFrame,
+  UnsynchronisedLyricsFrame,
+  UserDefinedTextFrame,
 } from "./types.ts";
 
 export function isUnknownFrame(frame: Frame): frame is UnknownFrame {
@@ -23,4 +25,16 @@ export function isAttachedPictureFrame(
 
 export function isCommentFrame(frame: Frame): frame is CommentFrame {
   return frame.type === FrameContentType.Comment;
+}
+
+export function isUnsynchronisedLyricsFrame(
+  frame: Frame,
+): frame is UnsynchronisedLyricsFrame {
+  return frame.type === FrameContentType.UnsynchronisedLyrics;
+}
+
+export function isUserDefinedTextFrame(
+  frame: Frame,
+): frame is UserDefinedTextFrame {
+  return frame.type === FrameContentType.UserDefinedText;
 }
