@@ -125,7 +125,7 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
     }
   })();
 
-  const frame: Frame = Object.assign(frameHeader, content);
+  const frame: Frame = markToStringTag(Object.assign(frameHeader, content));
 
   return [size, frame];
 }
@@ -214,4 +214,29 @@ function parseUnknownFrameContent(
     type: FrameContentType.Unknown,
     raw: bytes.slice(),
   };
+}
+
+function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
+  switch (content.type) {
+    case FrameContentType.Unknown:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "UnknownFrame",
+        enumerable: false,
+      });
+    case FrameContentType.Text:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "TextFrame",
+        enumerable: false,
+      });
+    case FrameContentType.AttachedPicture:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "AttachedFrame",
+        enumerable: false,
+      });
+    case FrameContentType.Comment:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "CommentFrame",
+        enumerable: false,
+      });
+  }
 }
