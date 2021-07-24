@@ -13,6 +13,7 @@ import type {
   ID3,
   TextFrame,
   UnknownFrame,
+  UnsynchronisedLyricsFrame,
   UserDefinedTextFrame,
 } from "./types.ts";
 import * as flags from "./_flags.ts";
@@ -121,6 +122,8 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
       return parseAttachedPictureFrameContent(frameContent);
     } else if (id === "COMM") {
       return parseCommentFrameContent(frameContent);
+    } else if (id === "USLT") {
+      return parseUnsynchronisedLyricsFrame(frameContent);
     } else if (id === "TXXX") {
       return parseUserDefinedTextFrameContent(frameContent);
     } else {
@@ -210,6 +213,35 @@ function parseCommentFrameContent(
   };
 }
 
+function parseUnsynchronisedLyricsFrame(
+  bytes: Uint8Array,
+): FrameContent<UnsynchronisedLyricsFrame> {
+  const encoding: TextEncoding = bytes[0];
+
+  const defaultDecoder = new TextDecoder("ISO-8859-1");
+  const language = defaultDecoder.decode(bytes.subarray(1, 4));
+
+  const decoder = new TextDecoder(TextEncoding[encoding]);
+  const descriptorSize = bytes.subarray(4).indexOf(0);
+  let offset = 4 + descriptorSize;
+  const descriptor = decoder.decode(bytes.subarray(4, offset));
+
+  offset += 1;
+  if (bytes[offset] === 0) {
+    offset += 1;
+  }
+
+  const lyrics = decoder.decode(bytes.subarray(offset, bytes.length - 1));
+
+  return {
+    type: FrameContentType.UnsynchronisedLyrics,
+    encoding,
+    language,
+    descriptor,
+    lyrics,
+  };
+}
+
 function parseUserDefinedTextFrameContent(
   bytes: Uint8Array,
 ): FrameContent<UserDefinedTextFrame> {
@@ -264,6 +296,11 @@ function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
     case FrameContentType.Comment:
       return Object.defineProperty(content, Symbol.toStringTag, {
         value: "CommentFrame",
+        enumerable: false,
+      });
+    case FrameContentType.UnsynchronisedLyrics:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "UnsynchronisedLyricsFrame",
         enumerable: false,
       });
     case FrameContentType.UserDefinedText:

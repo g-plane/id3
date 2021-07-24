@@ -19,6 +19,7 @@ export type Frame =
   | TextFrame
   | AttachedPictureFrame
   | CommentFrame
+  | UnsynchronisedLyricsFrame
   | UserDefinedTextFrame
   | UnknownFrame;
 
@@ -41,6 +42,7 @@ export enum FrameContentType {
   Text,
   AttachedPicture,
   Comment,
+  UnsynchronisedLyrics,
   UserDefinedText,
 }
 
@@ -98,6 +100,14 @@ export interface CommentFrame extends FrameHeader {
   language: string;
   description: string;
   text: string;
+}
+
+export interface UnsynchronisedLyricsFrame extends FrameHeader {
+  type: FrameContentType.UnsynchronisedLyrics;
+  encoding: TextEncoding;
+  language: string;
+  descriptor: string;
+  lyrics: string;
 }
 
 export interface UserDefinedTextFrame extends FrameHeader {
