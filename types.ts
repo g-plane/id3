@@ -21,6 +21,7 @@ export type Frame =
   | CommentFrame
   | UnsynchronisedLyricsFrame
   | UserDefinedTextFrame
+  | PrivateFrame
   | UnknownFrame;
 
 export interface FrameHeader {
@@ -44,6 +45,7 @@ export enum FrameContentType {
   Comment,
   UnsynchronisedLyrics,
   UserDefinedText,
+  Private,
 }
 
 export type FrameContent<T extends Frame> = Omit<T, keyof FrameHeader>;
@@ -115,6 +117,12 @@ export interface UserDefinedTextFrame extends FrameHeader {
   encoding: TextEncoding;
   description: string;
   text: string;
+}
+
+export interface PrivateFrame extends FrameHeader {
+  type: FrameContentType.Private;
+  identifier: string;
+  data: Uint8Array;
 }
 
 export interface UnknownFrame extends FrameHeader {

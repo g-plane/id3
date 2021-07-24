@@ -3,6 +3,7 @@ import type {
   AttachedPictureFrame,
   CommentFrame,
   Frame,
+  PrivateFrame,
   TextFrame,
   UnknownFrame,
   UnsynchronisedLyricsFrame,
@@ -37,4 +38,8 @@ export function isUserDefinedTextFrame(
   frame: Frame,
 ): frame is UserDefinedTextFrame {
   return frame.type === FrameContentType.UserDefinedText;
+}
+
+export function isPrivateFrame(frame: Frame): frame is PrivateFrame {
+  return frame.type === FrameContentType.Private;
 }

@@ -11,6 +11,7 @@ import type {
   FrameContent,
   FrameHeader,
   ID3,
+  PrivateFrame,
   TextFrame,
   UnknownFrame,
   UnsynchronisedLyricsFrame,
@@ -126,6 +127,8 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
       return parseUnsynchronisedLyricsFrame(frameContent);
     } else if (id === "TXXX") {
       return parseUserDefinedTextFrameContent(frameContent);
+    } else if (id === "PRIV") {
+      return parsePrivateFrame(frameContent);
     } else {
       return parseUnknownFrameContent(frameContent);
     }
@@ -267,6 +270,20 @@ function parseUserDefinedTextFrameContent(
   };
 }
 
+function parsePrivateFrame(bytes: Uint8Array): FrameContent<PrivateFrame> {
+  const separator = bytes.indexOf(0);
+
+  const defaultDecoder = new TextDecoder("ISO-8859-1");
+  const identifier = defaultDecoder.decode(bytes.subarray(0, separator));
+  const data = bytes.slice(separator + 1);
+
+  return {
+    type: FrameContentType.Private,
+    identifier,
+    data,
+  };
+}
+
 function parseUnknownFrameContent(
   bytes: Uint8Array,
 ): FrameContent<UnknownFrame> {
@@ -306,6 +323,11 @@ function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
     case FrameContentType.UserDefinedText:
       return Object.defineProperty(content, Symbol.toStringTag, {
         value: "UserDefinedTextFrame",
+        enumerable: false,
+      });
+    case FrameContentType.Private:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "PrivateFrame",
         enumerable: false,
       });
   }
