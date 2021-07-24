@@ -19,6 +19,7 @@ export type Frame =
   | TextFrame
   | AttachedPictureFrame
   | CommentFrame
+  | UserDefinedTextFrame
   | UnknownFrame;
 
 export interface FrameHeader {
@@ -40,6 +41,7 @@ export enum FrameContentType {
   Text,
   AttachedPicture,
   Comment,
+  UserDefinedText,
 }
 
 export type FrameContent<T extends Frame> = Omit<T, keyof FrameHeader>;
@@ -94,6 +96,13 @@ export interface CommentFrame extends FrameHeader {
   type: FrameContentType.Comment;
   encoding: TextEncoding;
   language: string;
+  description: string;
+  text: string;
+}
+
+export interface UserDefinedTextFrame extends FrameHeader {
+  type: FrameContentType.UserDefinedText;
+  encoding: TextEncoding;
   description: string;
   text: string;
 }

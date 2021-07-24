@@ -13,6 +13,7 @@ import type {
   ID3,
   TextFrame,
   UnknownFrame,
+  UserDefinedTextFrame,
 } from "./types.ts";
 import * as flags from "./_flags.ts";
 
@@ -120,6 +121,8 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
       return parseAttachedPictureFrameContent(frameContent);
     } else if (id === "COMM") {
       return parseCommentFrameContent(frameContent);
+    } else if (id === "TXXX") {
+      return parseUserDefinedTextFrameContent(frameContent);
     } else {
       return parseUnknownFrameContent(frameContent);
     }
@@ -207,6 +210,32 @@ function parseCommentFrameContent(
   };
 }
 
+function parseUserDefinedTextFrameContent(
+  bytes: Uint8Array,
+): FrameContent<UserDefinedTextFrame> {
+  const encoding: TextEncoding = bytes[0];
+  const decoder = new TextDecoder(TextEncoding[encoding]);
+
+  const descriptionSize = bytes.subarray(1).indexOf(0);
+  let offset = 1 + descriptionSize;
+  const description = decoder.decode(bytes.subarray(1, offset));
+
+  offset += 1;
+  if (bytes[offset] === 0) {
+    offset += 1;
+  }
+
+  console.log(bytes.subarray(offset, bytes.length - 1));
+  const text = decoder.decode(bytes.subarray(offset, bytes.length - 1));
+
+  return {
+    type: FrameContentType.UserDefinedText,
+    encoding,
+    description,
+    text,
+  };
+}
+
 function parseUnknownFrameContent(
   bytes: Uint8Array,
 ): FrameContent<UnknownFrame> {
@@ -236,6 +265,11 @@ function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
     case FrameContentType.Comment:
       return Object.defineProperty(content, Symbol.toStringTag, {
         value: "CommentFrame",
+        enumerable: false,
+      });
+    case FrameContentType.UserDefinedText:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "UserDefinedTextFrame",
         enumerable: false,
       });
   }
