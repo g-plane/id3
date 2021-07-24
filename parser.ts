@@ -225,7 +225,6 @@ function parseUserDefinedTextFrameContent(
     offset += 1;
   }
 
-  console.log(bytes.subarray(offset, bytes.length - 1));
   const text = decoder.decode(bytes.subarray(offset, bytes.length - 1));
 
   return {
