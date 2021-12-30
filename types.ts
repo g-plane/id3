@@ -20,6 +20,7 @@ export type Frame =
   | AttachedPictureFrame
   | CommentFrame
   | UnsynchronisedLyricsFrame
+  | URLLinkFrame
   | UserDefinedTextFrame
   | PrivateFrame
   | UnknownFrame;
@@ -43,6 +44,7 @@ export enum FrameContentType {
   Text,
   AttachedPicture,
   Comment,
+  URLLink,
   UnsynchronisedLyrics,
   UserDefinedText,
   Private,
@@ -102,6 +104,11 @@ export interface CommentFrame extends FrameHeader {
   language: string;
   description: string;
   text: string;
+}
+
+export interface URLLinkFrame extends FrameHeader {
+  type: FrameContentType.URLLink;
+  url: string;
 }
 
 export interface UnsynchronisedLyricsFrame extends FrameHeader {

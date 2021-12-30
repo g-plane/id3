@@ -15,6 +15,7 @@ import type {
   TextFrame,
   UnknownFrame,
   UnsynchronisedLyricsFrame,
+  URLLinkFrame,
   UserDefinedTextFrame,
 } from "./types.ts";
 import * as flags from "./_flags.ts";
@@ -129,6 +130,8 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
       return parseUserDefinedTextFrameContent(frameContent);
     } else if (id === "PRIV") {
       return parsePrivateFrame(frameContent);
+    } else if (id.startsWith("W") && id !== "WXXX") {
+      return parseURLLinkFrame(frameContent);
     } else {
       return parseUnknownFrameContent(frameContent);
     }
@@ -284,6 +287,15 @@ function parsePrivateFrame(bytes: Uint8Array): FrameContent<PrivateFrame> {
   };
 }
 
+function parseURLLinkFrame(bytes: Uint8Array): FrameContent<URLLinkFrame> {
+  const decoder = new TextDecoder();
+
+  return {
+    type: FrameContentType.URLLink,
+    url: decoder.decode(bytes),
+  };
+}
+
 function parseUnknownFrameContent(
   bytes: Uint8Array,
 ): FrameContent<UnknownFrame> {
@@ -318,6 +330,11 @@ function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
     case FrameContentType.UnsynchronisedLyrics:
       return Object.defineProperty(content, Symbol.toStringTag, {
         value: "UnsynchronisedLyricsFrame",
+        enumerable: false,
+      });
+    case FrameContentType.URLLink:
+      return Object.defineProperty(content, Symbol.toStringTag, {
+        value: "URLLinkFrame",
         enumerable: false,
       });
     case FrameContentType.UserDefinedText:

@@ -7,6 +7,7 @@ import type {
   TextFrame,
   UnknownFrame,
   UnsynchronisedLyricsFrame,
+  URLLinkFrame,
   UserDefinedTextFrame,
 } from "./types.ts";
 
@@ -42,4 +43,8 @@ export function isUserDefinedTextFrame(
 
 export function isPrivateFrame(frame: Frame): frame is PrivateFrame {
   return frame.type === FrameContentType.Private;
+}
+
+export function isURLLinkFrame(frame: Frame): frame is URLLinkFrame {
+  return frame.type === FrameContentType.URLLink;
 }
