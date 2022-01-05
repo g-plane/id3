@@ -146,17 +146,11 @@ function parseTextFrameContent(bytes: Uint8Array): FrameContent<TextFrame> {
   const encoding: TextEncoding = bytes[0];
   const decoder = new TextDecoder(TextEncoding[encoding]);
 
-  const terminatorCount =
-    encoding === TextEncoding["UTF-16"] || encoding === TextEncoding["UTF-16BE"]
-      ? 2
-      : 1;
-
   return {
     type: FrameContentType.Text,
     encoding,
-    text: decoder.decode(
-      bytes.subarray(1, bytes.length - terminatorCount),
-    ),
+    // deno-lint-ignore no-control-regex
+    text: decoder.decode(bytes.subarray(1)).replace(/\x00*$/, ""),
   };
 }
 
