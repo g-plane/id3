@@ -1,4 +1,4 @@
-export type ID3 = {
+export interface ID3 {
   version: {
     major: number;
     revision: number;
@@ -8,7 +8,7 @@ export type ID3 = {
     isExperimental: boolean;
   };
   frames: Frame[];
-};
+}
 
 export enum Preservation {
   Preserved,
