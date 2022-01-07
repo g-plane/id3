@@ -19,13 +19,10 @@ import type {
   UserDefinedTextFrame,
 } from "./types.ts";
 import * as flags from "./_flags.ts";
-
-function countSize(bytes: Uint8Array): number {
-  return (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
-}
+import { calculateSize, hasID3 } from "./_shared.ts";
 
 export function parse(bytes: Uint8Array): ID3 | undefined {
-  if (bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) {
+  if (!hasID3(bytes)) {
     return undefined;
   }
 
@@ -38,7 +35,7 @@ export function parse(bytes: Uint8Array): ID3 | undefined {
   const isExperimental = !!(headerFlags & flags.FLAG_EXPERIMENTAL_INDICATOR);
   const hasFooter = headerFlags & flags.FLAG_FOOTER_PRESENT;
 
-  const tagSize = countSize(bytes.subarray(6));
+  const tagSize = calculateSize(bytes.subarray(6));
   let offset = 10;
 
   const extendedHeaderSize = hasExtendedHeader
@@ -64,7 +61,7 @@ export function parse(bytes: Uint8Array): ID3 | undefined {
 }
 
 function skipExtenedHeader(bytes: Uint8Array) {
-  return countSize(bytes);
+  return calculateSize(bytes);
 }
 
 function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
@@ -91,7 +88,7 @@ function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
   const defaultDecoder = new TextDecoder("ISO-8859-1");
 
   const id = defaultDecoder.decode(bytes.subarray(0, 4));
-  const size = countSize(bytes.subarray(4));
+  const size = calculateSize(bytes.subarray(4));
 
   const statusFlags = bytes[8];
   const formatFlags = bytes[9];
