@@ -3,6 +3,6 @@ export function hasID3(bytes: Uint8Array): boolean {
     bytes[2] !== /* "3" */ 0x33;
 }
 
-export function calculateSize(bytes: Uint8Array): number {
+export function readSize(bytes: Uint8Array): number {
   return (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
 }
