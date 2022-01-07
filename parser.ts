@@ -199,7 +199,7 @@ function parseCommentFrameContent(
     offset += 1;
   }
 
-  const text = decoder.decode(bytes.subarray(offset, bytes.length - 1));
+  const text = decoder.decode(bytes.subarray(offset));
 
   return {
     type: FrameContentType.Comment,
@@ -228,7 +228,7 @@ function parseUnsynchronisedLyricsFrame(
     offset += 1;
   }
 
-  const lyrics = decoder.decode(bytes.subarray(offset, bytes.length - 1));
+  const lyrics = decoder.decode(bytes.subarray(offset));
 
   return {
     type: FrameContentType.UnsynchronisedLyrics,
@@ -254,7 +254,7 @@ function parseUserDefinedTextFrameContent(
     offset += 1;
   }
 
-  const text = decoder.decode(bytes.subarray(offset, bytes.length - 1));
+  const text = decoder.decode(bytes.subarray(offset));
 
   return {
     type: FrameContentType.UserDefinedText,
