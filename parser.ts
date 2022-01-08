@@ -19,7 +19,7 @@ import type {
   UserDefinedTextFrame,
 } from "./types.ts";
 import * as flags from "./_flags.ts";
-import { hasID3, readSize } from "./_shared.ts";
+import { hasID3, readTagSize } from "./_shared.ts";
 
 export function parse(bytes: Uint8Array): ID3 | undefined {
   if (!hasID3(bytes)) {
@@ -35,16 +35,17 @@ export function parse(bytes: Uint8Array): ID3 | undefined {
   const isExperimental = !!(headerFlags & flags.FLAG_EXPERIMENTAL_INDICATOR);
   const hasFooter = headerFlags & flags.FLAG_FOOTER_PRESENT;
 
-  const tagSize = readSize(bytes.subarray(6));
+  const tagSize = readTagSize(bytes.subarray(6));
   let offset = 10;
 
   const extendedHeaderSize = hasExtendedHeader
-    ? skipExtenedHeader(bytes.subarray(offset))
+    ? skipExtenedHeader(bytes.subarray(offset), majorVersion)
     : 0;
   offset += extendedHeaderSize;
 
   const frames = parseFrames(
     bytes.subarray(offset, offset + (tagSize - extendedHeaderSize)),
+    { version: majorVersion },
   );
 
   return {
@@ -60,8 +61,16 @@ export function parse(bytes: Uint8Array): ID3 | undefined {
   };
 }
 
-function skipExtenedHeader(bytes: Uint8Array) {
-  return readSize(bytes);
+function readSize(bytes: Uint8Array, version: number): number {
+  if (version >= 4) {
+    return (bytes[0] << 21) + (bytes[1] << 14) + (bytes[2] << 7) + bytes[3];
+  } else {
+    return (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
+  }
+}
+
+function skipExtenedHeader(bytes: Uint8Array, version: number) {
+  return readSize(bytes, version);
 }
 
 function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
@@ -69,14 +78,14 @@ function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
     bytes[offset + 2] === 0 && bytes[offset + 3] === 0;
 }
 
-function parseFrames(bytes: Uint8Array): Frame[] {
+function parseFrames(bytes: Uint8Array, options: { version: number }): Frame[] {
   let offset = 0;
   const frames: Frame[] = [];
 
   while (
     offset < bytes.length && !peekIsPadding(bytes, offset)
   ) {
-    const [frameSize, frame] = parseFrame(bytes.subarray(offset));
+    const [frameSize, frame] = parseFrame(bytes.subarray(offset), options);
     frames.push(frame);
     offset += 10 + frameSize;
   }
@@ -84,11 +93,14 @@ function parseFrames(bytes: Uint8Array): Frame[] {
   return frames;
 }
 
-function parseFrame(bytes: Uint8Array): [size: number, frame: Frame] {
+function parseFrame(
+  bytes: Uint8Array,
+  { version }: { version: number },
+): [size: number, frame: Frame] {
   const defaultDecoder = new TextDecoder("ISO-8859-1");
 
   const id = defaultDecoder.decode(bytes.subarray(0, 4));
-  const size = readSize(bytes.subarray(4));
+  const size = readSize(bytes.subarray(4), version);
 
   const statusFlags = bytes[8];
   const formatFlags = bytes[9];
