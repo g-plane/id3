@@ -102,6 +102,18 @@ function dumpSize(size: number, version: number): Uint8Array {
   );
 }
 
+function dumpEncoding(encoding: TextEncoding): Uint8Array {
+  switch (encoding) {
+    case TextEncoding["ISO-8859-1"]:
+      return Uint8Array.of(TextEncoding["ISO-8859-1"]);
+    case TextEncoding["UTF-8"]:
+      return Uint8Array.of(TextEncoding["UTF-8"]);
+    case TextEncoding["UTF-16"]:
+    case TextEncoding["UTF-16BE"]:
+      return Uint8Array.of(TextEncoding["UTF-16"]);
+  }
+}
+
 function dumpTerminator(encoding: TextEncoding): Uint8Array {
   switch (encoding) {
     case TextEncoding["ISO-8859-1"]:
@@ -170,18 +182,6 @@ function dumpTextFrame(frame: TextFrame): Uint8Array {
     dumpEncoding(frame.encoding),
     encodeText(frame.text, frame.encoding),
   );
-}
-
-function dumpEncoding(encoding: TextEncoding): Uint8Array {
-  switch (encoding) {
-    case TextEncoding["ISO-8859-1"]:
-      return Uint8Array.of(TextEncoding["ISO-8859-1"]);
-    case TextEncoding["UTF-8"]:
-      return Uint8Array.of(TextEncoding["UTF-8"]);
-    case TextEncoding["UTF-16"]:
-    case TextEncoding["UTF-16BE"]:
-      return Uint8Array.of(TextEncoding["UTF-16"]);
-  }
 }
 
 function dumpAttachedPictureFrame(frame: AttachedPictureFrame): Uint8Array {
