@@ -174,6 +174,7 @@ function parseAttachedPictureFrameContent(
 
   return {
     type: FrameContentType.AttachedPicture,
+    encoding,
     mimeType,
     pictureType,
     description,

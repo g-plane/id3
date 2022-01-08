@@ -67,6 +67,7 @@ export enum TextEncoding {
 
 export interface AttachedPictureFrame extends FrameHeader {
   type: FrameContentType.AttachedPicture;
+  encoding: TextEncoding;
   mimeType: string;
   pictureType: PictureType;
   description: string;
