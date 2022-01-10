@@ -1,4 +1,9 @@
-import { FrameContentType, Preservation, TextEncoding } from "./types.ts";
+import {
+  FrameContentType,
+  isTextFrame,
+  Preservation,
+  TextEncoding,
+} from "./types.ts";
 import type {
   Frame,
   FrameContent,
@@ -6,7 +11,6 @@ import type {
   ID3,
   TextFrame,
 } from "./types.ts";
-import { isTextFrame } from "./frameCheck.ts";
 
 export interface TagView {
   get title(): string | undefined;
