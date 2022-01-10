@@ -1,14 +1,17 @@
 import {
   FrameContentType,
+  isAttachedPictureFrame,
   isTextFrame,
   Preservation,
   TextEncoding,
 } from "./types.ts";
 import type {
+  AttachedPictureFrame,
   Frame,
   FrameContent,
   FrameHeader,
   ID3,
+  PictureType,
   TextFrame,
 } from "./types.ts";
 
@@ -21,11 +24,29 @@ export interface TagView {
   set album(value: string | undefined | null);
   get track(): TrackNumber | undefined;
   set track(value: TrackNumber | undefined | null);
+  findPicture(type: PictureType): AttachedPicture | undefined;
+  attachPicture(options: PictureAttachingOptions): void;
+  removePicture(type: PictureType): void;
+  removeAllPictures(): void;
 }
 
 export interface TrackNumber {
   current: number;
   total?: number;
+}
+
+export interface AttachedPicture {
+  mime: string;
+  type: PictureType;
+  description: string;
+  picture: Uint8Array;
+}
+
+export interface PictureAttachingOptions {
+  type: PictureType;
+  picture: Uint8Array;
+  mime?: string;
+  description?: string;
 }
 
 export function createTagView(id3: ID3 | undefined): TagView {
@@ -92,6 +113,51 @@ export function createTagView(id3: ID3 | undefined): TagView {
           ? current.toString()
           : undefined,
       });
+    },
+    findPicture(type) {
+      const frame = tag.frames.find((frame): frame is AttachedPictureFrame =>
+        isAttachedPictureFrame(frame) && frame.pictureType === type
+      );
+      if (frame) {
+        return {
+          mime: frame.mimeType,
+          type: frame.pictureType,
+          description: frame.description,
+          picture: frame.picture,
+        };
+      }
+    },
+    attachPicture({ type, picture, mime, description = "" }) {
+      const mimeType = mime || detectPictureMime(picture);
+
+      const frame = tag.frames.find((frame): frame is AttachedPictureFrame =>
+        isAttachedPictureFrame(frame) && frame.pictureType === type
+      );
+      if (frame) {
+        frame.mimeType = mimeType;
+        frame.pictureType = type;
+        frame.description = description;
+        frame.picture = picture;
+      } else {
+        const frame = createFrame(FrameContentType.AttachedPicture, "APIC", {
+          encoding: tag.version.major >= 4
+            ? TextEncoding["UTF-8"]
+            : TextEncoding["UTF-16"],
+          mimeType,
+          pictureType: type,
+          description,
+          picture,
+        });
+        tag.frames.push(frame);
+      }
+    },
+    removePicture(type) {
+      tag.frames = tag.frames.filter((frame) =>
+        !(isAttachedPictureFrame(frame) && frame.pictureType === type)
+      );
+    },
+    removeAllPictures() {
+      tag.frames = tag.frames.filter((frame) => !isAttachedPictureFrame(frame));
     },
   };
 }
@@ -172,5 +238,31 @@ function setTextFrameValue(
         tag.frames.splice(index, 0, frame);
       }
     }
+  }
+}
+
+function detectPictureMime(picture: Uint8Array): string {
+  if (picture[0] === 0xFF && picture[1] === 0xD8 && picture[2] === 0xFF) {
+    return "image/jpeg";
+  } else if (
+    picture[0] === 0x89 && picture[1] === 0x50 && picture[2] === 0x4E &&
+    picture[3] === 0x47 && picture[4] === 0x0D && picture[5] === 0x0A &&
+    picture[6] === 0x1A && picture[7] === 0x0A
+  ) {
+    return "image/png";
+  } else if (picture[0] === 0x42 && picture[1] === 0x4D) {
+    return "image/bmp";
+  } else if (
+    picture[0] === 0x47 && picture[1] === 0x49 && picture[2] === 0x46
+  ) {
+    return "image/gif";
+  } else if (
+    picture[0] === 0x52 && picture[1] === 0x49 && picture[2] === 0x46 &&
+    picture[3] === 0x46 && picture[8] === 0x57 && picture[9] === 0x45 &&
+    picture[10] === 0x42 && picture[11] === 0x50
+  ) {
+    return "image/webp";
+  } else {
+    throw new Error("Unknown picture MIME.");
   }
 }
