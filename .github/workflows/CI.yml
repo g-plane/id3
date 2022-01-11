@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Setup Deno
         uses: denoland/setup-deno@v1
         with:
