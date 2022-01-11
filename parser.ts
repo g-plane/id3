@@ -33,7 +33,6 @@ export function parse(bytes: Uint8Array): ID3 | undefined {
   const unsynchronisation = !!(headerFlags & flags.FLAG_UNSYNCHRONISATION);
   const hasExtendedHeader = headerFlags & flags.FLAG_EXTENDED_HEADER;
   const isExperimental = !!(headerFlags & flags.FLAG_EXPERIMENTAL_INDICATOR);
-  const hasFooter = headerFlags & flags.FLAG_FOOTER_PRESENT;
 
   const tagSize = readTagSize(bytes.subarray(6));
   let offset = 10;
