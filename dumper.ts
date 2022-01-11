@@ -46,9 +46,9 @@ function encodeText(text: string, encoding: TextEncoding): Uint8Array {
   }
 }
 
-export function dump(id3: ID3, originalBytes: Uint8Array): Uint8Array {
-  const rest = originalBytes.slice(
-    hasID3(originalBytes) ? (readTagSize(originalBytes.subarray(6)) + 10) : 0,
+export function dump(id3: ID3, file: Uint8Array): Uint8Array {
+  const rest = file.slice(
+    hasID3(file) ? (readTagSize(file.subarray(6)) + 10) : 0,
   );
 
   const frames = id3.frames.map((frame) => dumpFrame(frame, id3.version.major));
