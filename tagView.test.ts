@@ -2,7 +2,22 @@ import {
   assertEquals,
   assertThrows,
 } from "https://deno.land/std@0.120.0/testing/asserts.ts";
-import { createTagView, PictureType } from "./mod.ts";
+import { parseBuffer as mmParse } from "https://esm.sh/music-metadata@7.11.4/lib/core";
+import { createTagView, dump, parse, PictureType } from "./mod.ts";
+
+Deno.test("read and write title", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+
+  // read
+  assertEquals(tagView.title, "v2.4 title");
+
+  // write
+  tagView.title = "updated title";
+  const { common } = await mmParse(dump(id3!, file));
+  assertEquals(common.title, "updated title");
+});
 
 Deno.test("detect JPG file", async () => {
   const tagView = createTagView(undefined);
