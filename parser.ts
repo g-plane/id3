@@ -42,10 +42,10 @@ export function parse(bytes: Uint8Array): ID3 | undefined {
     : 0;
   offset += extendedHeaderSize;
 
-  const frames = parseFrames(
-    bytes.subarray(offset, offset + (tagSize - extendedHeaderSize)),
-    { version: majorVersion },
-  );
+  const frames = parseFrames(bytes.subarray(offset), {
+    totalFramesSize: offset + (tagSize - extendedHeaderSize),
+    version: majorVersion,
+  });
 
   return {
     version: {
@@ -77,12 +77,15 @@ function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
     bytes[offset + 2] === 0 && bytes[offset + 3] === 0;
 }
 
-function parseFrames(bytes: Uint8Array, options: { version: number }): Frame[] {
+function parseFrames(
+  bytes: Uint8Array,
+  options: { totalFramesSize: number; version: number },
+): Frame[] {
   let offset = 0;
   const frames: Frame[] = [];
 
   while (
-    offset < bytes.length && !peekIsPadding(bytes, offset)
+    offset < options.totalFramesSize && !peekIsPadding(bytes, offset)
   ) {
     const [frameSize, frame] = parseFrame(bytes.subarray(offset), options);
     frames.push(frame);
