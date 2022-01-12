@@ -20,4 +20,4 @@ jobs:
       - name: Lint
         run: deno lint --config deno.json
       - name: Run tests
-        run: deno test --allow-read
+        run: deno test --allow-read=./fixtures
