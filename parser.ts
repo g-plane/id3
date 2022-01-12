@@ -77,6 +77,33 @@ function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
     bytes[offset + 2] === 0 && bytes[offset + 3] === 0;
 }
 
+function findTerminatorIndex(
+  encoding: TextEncoding,
+  bytes: Uint8Array,
+): number {
+  switch (encoding) {
+    case TextEncoding["ISO-8859-1"]:
+    case TextEncoding["UTF-8"]:
+      return bytes.indexOf(0);
+    case TextEncoding["UTF-16"]:
+    case TextEncoding["UTF-16BE"]:
+      return bytes.findIndex((byte, index, bytes) =>
+        byte === 0 && bytes[index + 1] === 0
+      );
+  }
+}
+
+function skipTerminator(encoding: TextEncoding): number {
+  switch (encoding) {
+    case TextEncoding["ISO-8859-1"]:
+    case TextEncoding["UTF-8"]:
+      return 1;
+    case TextEncoding["UTF-16"]:
+    case TextEncoding["UTF-16BE"]:
+      return 2;
+  }
+}
+
 function parseFrames(
   bytes: Uint8Array,
   options: { totalFramesSize: number; version: number },
@@ -176,13 +203,15 @@ function parseAttachedPictureFrameContent(
   const pictureType: PictureType = bytes[offset];
 
   offset += 1;
-  const descriptionSize = bytes.subarray(offset).indexOf(0);
+  const descriptionSize = findTerminatorIndex(encoding, bytes.subarray(offset));
   const decoder = new TextDecoder(TextEncoding[encoding]);
   const description = decoder.decode(
     bytes.subarray(offset, offset + descriptionSize),
   );
 
-  const picture = bytes.slice(offset + descriptionSize + 1);
+  offset += descriptionSize + skipTerminator(encoding);
+
+  const picture = bytes.slice(offset);
 
   return {
     type: FrameContentType.AttachedPicture,
@@ -203,14 +232,11 @@ function parseCommentFrameContent(
   const language = defaultDecoder.decode(bytes.subarray(1, 4));
 
   const decoder = new TextDecoder(TextEncoding[encoding]);
-  const descriptionSize = bytes.subarray(4).indexOf(0);
+  const descriptionSize = findTerminatorIndex(encoding, bytes.subarray(4));
   let offset = 4 + descriptionSize;
   const description = decoder.decode(bytes.subarray(4, offset));
 
-  offset += 1;
-  if (bytes[offset] === 0) {
-    offset += 1;
-  }
+  offset += skipTerminator(encoding);
 
   const text = decoder.decode(bytes.subarray(offset));
 
