@@ -148,9 +148,7 @@ function parseFrame(
     }
   })();
 
-  const frame: Frame = markToStringTag(Object.assign(frameHeader, content));
-
-  return [size, frame];
+  return [size, Object.assign(frameHeader, content)];
 }
 
 function parseTextFrameContent(bytes: Uint8Array): FrameContent<TextFrame> {
@@ -309,49 +307,4 @@ function parseUnknownFrameContent(
     type: FrameContentType.Unknown,
     raw: bytes.slice(),
   };
-}
-
-function markToStringTag<T extends FrameContent<Frame>>(content: T): T {
-  switch (content.type) {
-    case FrameContentType.Unknown:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "UnknownFrame",
-        enumerable: false,
-      });
-    case FrameContentType.Text:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "TextFrame",
-        enumerable: false,
-      });
-    case FrameContentType.AttachedPicture:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "AttachedPictureFrame",
-        enumerable: false,
-      });
-    case FrameContentType.Comment:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "CommentFrame",
-        enumerable: false,
-      });
-    case FrameContentType.UnsynchronisedLyrics:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "UnsynchronisedLyricsFrame",
-        enumerable: false,
-      });
-    case FrameContentType.URLLink:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "URLLinkFrame",
-        enumerable: false,
-      });
-    case FrameContentType.UserDefinedText:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "UserDefinedTextFrame",
-        enumerable: false,
-      });
-    case FrameContentType.Private:
-      return Object.defineProperty(content, Symbol.toStringTag, {
-        value: "PrivateFrame",
-        enumerable: false,
-      });
-  }
 }
