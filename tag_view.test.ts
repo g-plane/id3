@@ -61,6 +61,60 @@ Deno.test("read and write track", async () => {
   assertEquals(common.track, { no: 2, of: 7 });
 });
 
+Deno.test("read and write picture", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+
+  // read
+  assertEquals(tagView.findPicture(PictureType.Media), undefined);
+  const frontCover = tagView.findPicture(PictureType.FrontCover)!;
+  assertEquals(frontCover.mime, "image/jpeg");
+  assertEquals(frontCover.description, "front cover");
+  assertEquals(
+    frontCover.picture,
+    await Deno.readFile("./fixtures/picture.jpg"),
+  );
+
+  // write
+  const png = await Deno.readFile("./fixtures/picture.png");
+  tagView.attachPicture({
+    type: PictureType.FrontCover,
+    description: "FRONT COVER",
+    picture: png,
+  });
+  const { common } = await mmParse(dump(id3!, file));
+  const mmFrontCover = common.picture!.find(({ type }) =>
+    type === "Cover (front)"
+  )!;
+  assertEquals(mmFrontCover.format, "image/png");
+  assertEquals(mmFrontCover.description, "FRONT COVER");
+  assertEquals(Uint8Array.from(mmFrontCover.data), png);
+});
+
+Deno.test("remove single picture", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+  tagView.removePicture(PictureType.BackCover);
+
+  const { common } = await mmParse(dump(id3!, file));
+  assertEquals(
+    common.picture!.some(({ type }) => type === "Cover (back)"),
+    false,
+  );
+});
+
+Deno.test("remove all pictures", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+  tagView.removeAllPictures();
+
+  const { common } = await mmParse(dump(id3!, file));
+  assertEquals(common.picture, undefined);
+});
+
 Deno.test("detect JPG file", async () => {
   const tagView = createTagView(undefined);
   tagView.attachPicture({
