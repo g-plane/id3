@@ -19,6 +19,48 @@ Deno.test("read and write title", async () => {
   assertEquals(common.title, "updated title");
 });
 
+Deno.test("read and write artist", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+
+  // read
+  assertEquals(tagView.artist, "v2.4 artist");
+
+  // write
+  tagView.artist = "updated artist";
+  const { common } = await mmParse(dump(id3!, file));
+  assertEquals(common.artist, "updated artist");
+});
+
+Deno.test("read and write album", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+
+  // read
+  assertEquals(tagView.album, "某专辑");
+
+  // write
+  tagView.album = "专辑名";
+  const { common } = await mmParse(dump(id3!, file));
+  assertEquals(common.album, "专辑名");
+});
+
+Deno.test("read and write track", async () => {
+  const file = await Deno.readFile("./fixtures/id3v2.4.mp3");
+  const id3 = parse(file);
+  const tagView = createTagView(id3);
+
+  // read
+  assertEquals(tagView.track, { current: 1, total: 6 });
+
+  // write
+  tagView.track = { current: 2, total: 7 };
+  const { common } = await mmParse(dump(id3!, file));
+  assertEquals(common.track, { no: 2, of: 7 });
+});
+
 Deno.test("detect JPG file", async () => {
   const tagView = createTagView(undefined);
   tagView.attachPicture({
