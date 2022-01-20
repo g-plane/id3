@@ -185,8 +185,7 @@ function parseTextFrameContent(bytes: Uint8Array): FrameContent<TextFrame> {
   return {
     type: FrameContentType.Text,
     encoding,
-    // deno-lint-ignore no-control-regex
-    text: decoder.decode(bytes.subarray(1)).replace(/\x00*$/, ""),
+    text: decoder.decode(bytes.subarray(1)),
   };
 }
 
