@@ -1,7 +1,7 @@
 {
   "extends": "@gplane/tsconfig",
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "ESNext",
     "target": "ESNext",
     "noUncheckedIndexedAccess": false
   },
