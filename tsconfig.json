@@ -1,0 +1,9 @@
+{
+  "extends": "@gplane/tsconfig",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "target": "ESNext",
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src"]
+}
