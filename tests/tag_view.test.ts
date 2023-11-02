@@ -1,7 +1,7 @@
+import { parseBuffer as mmParse } from 'music-metadata'
 import * as fs from 'node:fs/promises'
 import { expect, test } from 'vitest'
-import { parseBuffer as mmParse } from 'music-metadata'
-import { createTagView, dump, parse, PictureType } from '../src'
+import { PictureType, createTagView, dump, parse } from '../src'
 
 test('read and write title', async () => {
   const file = await fs.readFile('./fixtures/id3v2.4.mp3')

@@ -1,16 +1,3 @@
-import { FrameContentType, Preservation, TextEncoding } from './types.js'
-import type {
-  AttachedPictureFrame,
-  CommentFrame,
-  Frame,
-  ID3,
-  PrivateFrame,
-  TextFrame,
-  UnknownFrame,
-  UnsynchronisedLyricsFrame,
-  URLLinkFrame,
-  UserDefinedTextFrame,
-} from './types.js'
 import {
   FLAG_DATA_LENGTH_INDICATOR,
   FLAG_EXPERIMENTAL_INDICATOR,
@@ -22,6 +9,19 @@ import {
   FLAG_UNSYNCHRONISATION,
 } from './flags.js'
 import { hasID3, readTagSize } from './shared.js'
+import { FrameContentType, Preservation, TextEncoding } from './types.js'
+import type {
+  AttachedPictureFrame,
+  CommentFrame,
+  Frame,
+  ID3,
+  PrivateFrame,
+  TextFrame,
+  URLLinkFrame,
+  UnknownFrame,
+  UnsynchronisedLyricsFrame,
+  UserDefinedTextFrame,
+} from './types.js'
 
 const textEncoder = new TextEncoder()
 
@@ -208,7 +208,7 @@ function dumpURLLinkFrame(frame: URLLinkFrame): Uint8Array {
 }
 
 function dumpUnsynchronisedLyricsFrame(
-  frame: UnsynchronisedLyricsFrame
+  frame: UnsynchronisedLyricsFrame,
 ): Uint8Array {
   return concat(
     dumpEncoding(frame.encoding),

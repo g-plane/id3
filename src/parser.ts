@@ -1,3 +1,5 @@
+import * as flags from './flags.js'
+import { hasID3, readTagSize } from './shared.js'
 import {
   FrameContentType,
   PictureType,
@@ -13,13 +15,11 @@ import type {
   ID3,
   PrivateFrame,
   TextFrame,
+  URLLinkFrame,
   UnknownFrame,
   UnsynchronisedLyricsFrame,
-  URLLinkFrame,
   UserDefinedTextFrame,
 } from './types.js'
-import * as flags from './flags.js'
-import { hasID3, readTagSize } from './shared.js'
 
 export function parse(bytes: Uint8Array): ID3 | undefined {
   if (!hasID3(bytes)) {
@@ -83,7 +83,7 @@ function peekIsPadding(bytes: Uint8Array, offset: number): boolean {
 
 function findTerminatorIndex(
   encoding: TextEncoding,
-  bytes: Uint8Array
+  bytes: Uint8Array,
 ): number {
   switch (encoding) {
     case TextEncoding['ISO-8859-1']:
@@ -110,7 +110,7 @@ function skipTerminator(encoding: TextEncoding): number {
 
 function parseFrames(
   bytes: Uint8Array,
-  options: { totalFramesSize: number; version: number }
+  options: { totalFramesSize: number, version: number },
 ): Frame[] {
   let offset = 0
   const frames: Frame[] = []
@@ -126,7 +126,7 @@ function parseFrames(
 
 function parseFrame(
   bytes: Uint8Array,
-  { version }: { version: number }
+  { version }: { version: number },
 ): [size: number, frame: Frame] {
   const defaultDecoder = new TextDecoder('ISO-8859-1')
 
@@ -139,14 +139,12 @@ function parseFrame(
   const frameHeader: FrameHeader = {
     id,
     flags: {
-      tagAlterPreservation:
-        statusFlags & flags.FLAG_TAG_ALTER_PRESERVATION
-          ? Preservation.Discarded
-          : Preservation.Preserved,
-      fileAlterPreservation:
-        statusFlags & flags.FLAG_FILE_ALTER_PRESERVATION
-          ? Preservation.Discarded
-          : Preservation.Preserved,
+      tagAlterPreservation: statusFlags & flags.FLAG_TAG_ALTER_PRESERVATION
+        ? Preservation.Discarded
+        : Preservation.Preserved,
+      fileAlterPreservation: statusFlags & flags.FLAG_FILE_ALTER_PRESERVATION
+        ? Preservation.Discarded
+        : Preservation.Preserved,
       readOnly: !!(statusFlags & flags.FLAG_FRAME_READ_ONLY),
       grouping: !!(formatFlags & flags.FLAG_FRAME_HAS_GROUP),
       compressed: !!(formatFlags & flags.FLAG_COMPRESSION),
@@ -195,7 +193,7 @@ function parseTextFrameContent(bytes: Uint8Array): FrameContent<TextFrame> {
 }
 
 function parseAttachedPictureFrameContent(
-  bytes: Uint8Array
+  bytes: Uint8Array,
 ): FrameContent<AttachedPictureFrame> {
   const encoding: TextEncoding = bytes[0]
 
@@ -228,7 +226,7 @@ function parseAttachedPictureFrameContent(
 }
 
 function parseCommentFrameContent(
-  bytes: Uint8Array
+  bytes: Uint8Array,
 ): FrameContent<CommentFrame> {
   const encoding: TextEncoding = bytes[0]
 
@@ -254,7 +252,7 @@ function parseCommentFrameContent(
 }
 
 function parseUnsynchronisedLyricsFrame(
-  bytes: Uint8Array
+  bytes: Uint8Array,
 ): FrameContent<UnsynchronisedLyricsFrame> {
   const encoding: TextEncoding = bytes[0]
 
@@ -283,7 +281,7 @@ function parseUnsynchronisedLyricsFrame(
 }
 
 function parseUserDefinedTextFrameContent(
-  bytes: Uint8Array
+  bytes: Uint8Array,
 ): FrameContent<UserDefinedTextFrame> {
   const encoding: TextEncoding = bytes[0]
   const decoder = new TextDecoder(TextEncoding[encoding])
@@ -331,7 +329,7 @@ function parseURLLinkFrame(bytes: Uint8Array): FrameContent<URLLinkFrame> {
 }
 
 function parseUnknownFrameContent(
-  bytes: Uint8Array
+  bytes: Uint8Array,
 ): FrameContent<UnknownFrame> {
   return {
     type: FrameContentType.Unknown,

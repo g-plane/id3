@@ -1,9 +1,9 @@
 import {
   FrameContentType,
-  isAttachedPictureFrame,
-  isTextFrame,
   Preservation,
   TextEncoding,
+  isAttachedPictureFrame,
+  isTextFrame,
 } from './types.js'
 import type {
   AttachedPictureFrame,
@@ -104,12 +104,11 @@ export function createTagView(id3: ID3 | undefined): TagView {
       setTextFrameValue({
         tag,
         id: 'TRCK',
-        value:
-          current && total
-            ? `${current}/${total}`
-            : current
-            ? current.toString()
-            : undefined,
+        value: current && total
+          ? `${current}/${total}`
+          : current
+          ? current.toString()
+          : undefined,
       })
     },
     findPicture(type) {
@@ -140,10 +139,9 @@ export function createTagView(id3: ID3 | undefined): TagView {
         frame.picture = picture
       } else {
         const frame = createFrame(FrameContentType.AttachedPicture, 'APIC', {
-          encoding:
-            tag.version.major >= 4
-              ? TextEncoding['UTF-8']
-              : TextEncoding['UTF-16'],
+          encoding: tag.version.major >= 4
+            ? TextEncoding['UTF-8']
+            : TextEncoding['UTF-16'],
           mimeType,
           pictureType: type,
           description,
@@ -166,7 +164,7 @@ export function createTagView(id3: ID3 | undefined): TagView {
 
 function createFrame<
   T extends FrameContentType,
-  F extends Extract<Frame, { type: T }>
+  F extends Extract<Frame, { type: T }>,
 >(type: T, id: string, content: Omit<FrameContent<F>, 'type'>): F {
   const header: FrameHeader = {
     id,
@@ -198,9 +196,9 @@ function setTextFrameValue({
   id,
   value,
 }: {
-  tag: ID3
-  id: string
-  value: string | undefined | null
+  tag: ID3,
+  id: string,
+  value: string | undefined | null,
 }) {
   if (value == null) {
     tag.frames = tag.frames.filter((frame) => frame.id !== id)
@@ -212,8 +210,9 @@ function setTextFrameValue({
     frame.text = value
   } else {
     const frame = createFrame(FrameContentType.Text, id, {
-      encoding:
-        tag.version.major >= 4 ? TextEncoding['UTF-8'] : TextEncoding['UTF-16'],
+      encoding: tag.version.major >= 4
+        ? TextEncoding['UTF-8']
+        : TextEncoding['UTF-16'],
       text: value,
     })
 

@@ -1,12 +1,12 @@
 import * as fs from 'node:fs/promises'
 import { expect, test } from 'vitest'
 import {
+  PictureType,
+  TextEncoding,
   isAttachedPictureFrame,
   isCommentFrame,
   isTextFrame,
   parse,
-  PictureType,
-  TextEncoding,
 } from '../src'
 import type { AttachedPictureFrame, TextFrame } from '../src'
 

@@ -1,11 +1,11 @@
 export interface ID3 {
   version: {
-    major: number
-    revision: number
+    major: number,
+    revision: number,
   }
   flags: {
-    unsynchronisation: boolean
-    isExperimental: boolean
+    unsynchronisation: boolean,
+    isExperimental: boolean,
   }
   frames: Frame[]
 }
@@ -28,14 +28,14 @@ export type Frame =
 export interface FrameHeader {
   id: string
   flags: {
-    tagAlterPreservation: Preservation
-    fileAlterPreservation: Preservation
-    readOnly: boolean
-    grouping: boolean
-    compressed: boolean
-    encrypted: boolean
-    unsyrchronised: boolean
-    hasDataLengthIndicator: boolean
+    tagAlterPreservation: Preservation,
+    fileAlterPreservation: Preservation,
+    readOnly: boolean,
+    grouping: boolean,
+    compressed: boolean,
+    encrypted: boolean,
+    unsyrchronised: boolean,
+    hasDataLengthIndicator: boolean,
   }
 }
 
@@ -147,7 +147,7 @@ export function isTextFrame(frame: Frame): frame is TextFrame {
 }
 
 export function isAttachedPictureFrame(
-  frame: Frame
+  frame: Frame,
 ): frame is AttachedPictureFrame {
   return frame.type === FrameContentType.AttachedPicture
 }
@@ -157,13 +157,13 @@ export function isCommentFrame(frame: Frame): frame is CommentFrame {
 }
 
 export function isUnsynchronisedLyricsFrame(
-  frame: Frame
+  frame: Frame,
 ): frame is UnsynchronisedLyricsFrame {
   return frame.type === FrameContentType.UnsynchronisedLyrics
 }
 
 export function isUserDefinedTextFrame(
-  frame: Frame
+  frame: Frame,
 ): frame is UserDefinedTextFrame {
   return frame.type === FrameContentType.UserDefinedText
 }
