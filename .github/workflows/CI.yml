@@ -16,7 +16,7 @@ jobs:
         with:
           version: 7.29.1
           run_install: true
-      - name: Prettier check
+      - name: Format check
         run: pnpm fmt:check
       - name: Run tests
         run: pnpm test
