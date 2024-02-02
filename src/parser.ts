@@ -1,11 +1,6 @@
 import * as flags from './flags.js'
 import { hasID3, readTagSize } from './shared.js'
-import {
-  FrameContentType,
-  PictureType,
-  Preservation,
-  TextEncoding,
-} from './types.js'
+import { FrameContentType, PictureType, Preservation, TextEncoding } from './types.js'
 import type {
   AttachedPictureFrame,
   CommentFrame,

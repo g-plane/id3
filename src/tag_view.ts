@@ -152,8 +152,7 @@ export function createTagView(id3: ID3 | undefined): TagView {
     },
     removePicture(type) {
       tag.frames = tag.frames.filter(
-        (frame) =>
-          !(isAttachedPictureFrame(frame) && frame.pictureType === type)
+        (frame) => !(isAttachedPictureFrame(frame) && frame.pictureType === type)
       )
     },
     removeAllPictures() {
